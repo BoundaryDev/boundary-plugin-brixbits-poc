@@ -25,7 +25,7 @@ class BrixbitsApp(object):
         }
 
     def start(self):
-        cherrypy.config.update({'server.socket_port': self.port, 'log.screen': False})
+        cherrypy.config.update({'server.socket_port': self.port, 'server.socket_host': '0.0.0.0', 'log.screen': False})
         cherrypy.log.error_log.propagate = False
         cherrypy.log.access_log.propagate = False
         cherrypy.quickstart(self, '/', self.conf)
