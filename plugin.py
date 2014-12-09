@@ -53,11 +53,11 @@ class BrixbitsPlugin(object):
     @staticmethod
     def get_app_server_metric_list():
         return (
-            ('BRIXBITS_POC_PERCENT_HEAP_MEMORY', 'CurrentPctOfHeapMemoryInUse', False),
+            ('BRIXBITS_POC_PERCENT_HEAP_MEMORY', 'CurrentPctOfHeapMemoryInUse', False, 0.01),
             ('BRIXBITS_POC_ERRORS', 'DeltaErrors', True),
             ('BRIXBITS_POC_EXCEPTIONS', 'DeltaExceptions', True),
             ('BRIXBITS_POC_GC_COUNT', 'DeltaGarbageCollectionCount', False),
-            ('BRIXBITS_POC_GC_PERCENT_CPU', 'DeltaGarbageCollectionPctCPU', False),
+            ('BRIXBITS_POC_GC_PERCENT_CPU', 'DeltaGarbageCollectionPctCPU', False, 0.01),
             ('BRIXBITS_POC_GC_TIME', 'DeltaGarbageCollectionTime', False),
             ('BRIXBITS_POC_JVM_CPU_INSTANCES_EXCEEDED', 'DeltaJVMCPUInstancesExceeded', False),
             ('BRIXBITS_POC_JVM_CPU_INSTANCES_EXCEEDED_PERCENT', 'DeltaJVMCPUInstancesExceededPct', False),
@@ -73,9 +73,9 @@ class BrixbitsPlugin(object):
     def get_transaction_metric_list():
         return (
             ('BRIXBITS_POC_ERRORS', 'DeltaErrors', True),
-            ('BRIXBITS_POC_PERCENT_ERRORS', 'DeltaErrorsPct', False),
+            ('BRIXBITS_POC_PERCENT_ERRORS', 'DeltaErrorsPct', False, 0.01),
             ('BRIXBITS_POC_EXCEPTIONS', 'DeltaExceptions', True),
-            ('BRIXBITS_POC_PERCENT_EXCEPTIONS', 'DeltaExceptionsPct', False),
+            ('BRIXBITS_POC_PERCENT_EXCEPTIONS', 'DeltaExceptionsPct', False, 0.01),
             ('BRIXBITS_POC_TRANSACTIONS', 'DeltaTransactions', False),
             ('BRIXBITS_POC_EXCEEDED_INSTANCE_LATENCY', 'ExceededInstanceLatencyInterval', False),
             ('BRIXBITS_POC_EXCEEDED_INTERVAL_LATENCY', 'ExceededIntervalLatency', True),
@@ -85,11 +85,14 @@ class BrixbitsPlugin(object):
     def handle_metric_list(self, metric_list, data, source):
         for metric_item in metric_list:
             boundary_name, metric_name, accumulate = metric_item[:3]
+            scale = metric_item[3] if len(metric_item) >= 4 else None
             metric_data = data.get(metric_name, None)
             if not metric_data:
                 # If certain metrics do not exist or have no value
                 # (e.g. disabled in the server or just inactive) - skip them.
                 continue
+            if scale:
+                metric_data = float(metric_data) * scale
             if accumulate:
                 value = self.accumulator.accumulate(source + '_' + metric_name, float(metric_data))
             else:
