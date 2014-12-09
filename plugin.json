@@ -1,0 +1,60 @@
+{
+    "description": "Shows data from Brixbits Agent",
+    "command": "python -u plugin.py",
+    "icon" : "icon.png",
+    "metrics" : [
+        "BRIXBITS_POC_PERCENT_HEAP_MEMORY",
+        "BRIXBITS_POC_ERRORS",
+        "BRIXBITS_POC_ERRORS",
+        "BRIXBITS_POC_PERCENT_ERRORS",
+        "BRIXBITS_POC_EXCEPTIONS",
+        "BRIXBITS_POC_EXCEPTIONS",
+        "BRIXBITS_POC_PERCENT_EXCEPTIONS",
+        "BRIXBITS_POC_GC_COUNT",
+        "BRIXBITS_POC_GC_PERCENT_CPU",
+        "BRIXBITS_POC_GC_TIME",
+        "BRIXBITS_POC_JVM_CPU_INSTANCES_EXCEEDED",
+        "BRIXBITS_POC_JVM_CPU_INSTANCES_EXCEEDED_PERCENT",
+        "BRIXBITS_POC_LIVE_SESSIONS",
+        "BRIXBITS_POC_NEW_SESSIONS",
+        "BRIXBITS_POC_TRANSACTIONS",
+        "BRIXBITS_POC_TRANSACTIONS",
+        "BRIXBITS_POC_EXCEEDED_INSTANCE_LATENCY",
+        "BRIXBITS_POC_EXCEEDED_INSTANCE_LATENCY",
+        "BRIXBITS_POC_EXCEEDED_INTERVAL_LATENCY",
+        "BRIXBITS_POC_EXCEEDED_INTERVAL_LATENCY",
+        "BRIXBITS_POC_AVG_JVM_CPU_USED",
+        "BRIXBITS_POC_LATENCY"],
+
+    "dashboards" : [{"name" : "Brixbits Dummy",
+        "layout" : 
+"d-w=4&d-h=3&d-pad=5&d-bg=none&d-g-MONGODB_CONNECTIONS_CURRENT=0-0-1-1&d-g-MONGODB_MEMORY_RESIDENT=0-1-1-1-t&d-g-MONGODB_MEMORY_VIRTUAL=0-1-1-1-b&d-g-MONGODB_CURSOR_TOTAL_OPEN=1-0-1-1-t&d-g-MONGODB_CURSOR_CLIENT_SIZE=1-0-1-1-b&d-g-MONGODB_METRICS_DOCUMENT_DELETED=2-0-1-1-t&d-g-MONGODB_METRICS_DOCUMENT_INSERTED=2-0-1-1-b&d-g-MONGODB_METRICS_DOCUMENT_RETURNED=3-0-1-1-t&d-g-MONGODB_METRICS_DOCUMENT_UPDATED=3-0-1-1-b&d-g-MONGODB_INDEX_ACCESSES=1-1-1-1&d-g-MONGODB_INDEX_HITS=2-1-1-1-t&d-g-MONGODB_INDEX_MISSES=2-1-1-1-b&d-g-MONGODB_NETWORK_IN=3-1-1-1-t&d-g-MONGODB_NETWORK_OUT=3-1-1-1-b&d-g-MONGODB_NETWORK_REQUESTS=0-2-1-1&d-g-MONGODB_GLOBAL_OP_COMMAND=1-2-1-1&d-g-MONGODB_GLOBAL_OP_INSERT=2-2-1-1-t&d-g-MONGODB_GLOBAL_OP_DELETE=2-2-1-1-b&d-g-MONGODB_GLOBAL_OP_GETMORE=3-2-1-1-t&d-g-MONGODB_GLOBAL_OP_QUERY=3-2-1-1-b" }],
+
+    "paramSchema": [
+        {
+            "title": "Listen Port",
+            "name": "port",
+            "description": "TCP port to listen for Brixbits data on",
+            "type": "integer",
+            "default": 12001,
+            "required": true
+        },
+        {
+            "title": "HTTP Username",
+            "name": "username",
+            "description": "Username required to post data to plugin",
+            "type": "string",
+            "default": "brixbits",
+            "required": true
+        },
+        {
+            "title": "HTTP Password",
+            "name": "password",
+            "description": "Password required to post data to plugin",
+            "type": "string",
+            "default": "brixbits",
+            "required": true
+        }
+    ]
+}
+

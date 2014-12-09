@@ -20,12 +20,14 @@ class BrixbitsApp(object):
             '/': {
                 'tools.auth_basic.on': True,
                 'tools.auth_basic.realm': 'Brixbitz Agent',
-                'tools.auth_basic.checkpassword': lambda self, u, p: u == username and p == password
+                'tools.auth_basic.checkpassword': lambda self, u, p: u == username and p == password,
             }
         }
 
     def start(self):
-        cherrypy.config.update({'server.socket_port': self.port})
+        cherrypy.config.update({'server.socket_port': self.port, 'log.screen': False})
+        cherrypy.log.error_log.propagate = False
+        cherrypy.log.access_log.propagate = False
         cherrypy.quickstart(self, '/', self.conf)
 
     @cherrypy.expose
@@ -40,7 +42,7 @@ class BrixbitsApp(object):
 
 class BrixbitsPlugin(object):
     MESSAGE_TYPE_APP_SERVER_METRICS = 2
-    MESSAGE_TYPE_APP_SERVER_TRANSACTIONS = 3
+    MESSAGE_TYPE_TRANSACTION_METRICS = 3
 
     def __init__(self, boundary_metric_prefix):
         self.boundary_metric_prefix = boundary_metric_prefix
@@ -51,18 +53,33 @@ class BrixbitsPlugin(object):
     @staticmethod
     def get_app_server_metric_list():
         return (
-            ('BRIXBITS_TOTAL_TRANSACTIONS', 'TotalTransactions', True),
-            ('BRIXBITS_TOTAL_ERRORS', 'TotalErrors', True),
-            ('BRIXBITS_NEW_SESSIONS', 'DeltaNewSessions', False),
-            ('BRIXBITS_TOTAL_GC_COUNT', 'TotalGarbageCollectionCount', True),
+            ('BRIXBITS_POC_PERCENT_HEAP_MEMORY', 'CurrentPctOfHeapMemoryInUse', False),
+            ('BRIXBITS_POC_ERRORS', 'DeltaErrors', True),
+            ('BRIXBITS_POC_EXCEPTIONS', 'DeltaExceptions', True),
+            ('BRIXBITS_POC_GC_COUNT', 'DeltaGarbageCollectionCount', False),
+            ('BRIXBITS_POC_GC_PERCENT_CPU', 'DeltaGarbageCollectionPctCPU', False),
+            ('BRIXBITS_POC_GC_TIME', 'DeltaGarbageCollectionTime', False),
+            ('BRIXBITS_POC_JVM_CPU_INSTANCES_EXCEEDED', 'DeltaJVMCPUInstancesExceeded', False),
+            ('BRIXBITS_POC_JVM_CPU_INSTANCES_EXCEEDED_PERCENT', 'DeltaJVMCPUInstancesExceededPct', False),
+            ('BRIXBITS_POC_LIVE_SESSIONS', 'DeltaLiveSessions', False),
+            ('BRIXBITS_POC_NEW_SESSIONS', 'DeltaNewSessions', False),
+            ('BRIXBITS_POC_TRANSACTIONS', 'DeltaTransactions', False),
+            ('BRIXBITS_POC_EXCEEDED_INSTANCE_LATENCY', 'ExceededInstanceLatency', True),
+            ('BRIXBITS_POC_EXCEEDED_INTERVAL_LATENCY', 'ExceededIntervalLatency', True),
+            ('BRIXBITS_POC_AVG_JVM_CPU_USED', 'IntervalAvgJVMCPUUsed', False),
         )
 
     @staticmethod
-    def get_app_server_transactions_metric_list():
+    def get_transaction_metric_list():
         return (
-            ('BRIXBITS_TOTAL_TRANSACTIONS', 'TotalTransactions', True),
-            ('BRIXBITS_TOTAL_ERRORS', 'TotalErrors', True),
-            ('BRIXBITS_DELTA_EXCEPTIONS', 'DeltaExceptions', False),
+            ('BRIXBITS_POC_ERRORS', 'DeltaErrors', True),
+            ('BRIXBITS_POC_PERCENT_ERRORS', 'DeltaErrorsPct', False),
+            ('BRIXBITS_POC_EXCEPTIONS', 'DeltaExceptions', True),
+            ('BRIXBITS_POC_PERCENT_EXCEPTIONS', 'DeltaExceptionsPct', False),
+            ('BRIXBITS_POC_TRANSACTIONS', 'DeltaTransactions', False),
+            ('BRIXBITS_POC_EXCEEDED_INSTANCE_LATENCY', 'ExceededInstanceLatencyInterval', False),
+            ('BRIXBITS_POC_EXCEEDED_INTERVAL_LATENCY', 'ExceededIntervalLatency', True),
+            ('BRIXBITS_POC_LATENCY', 'IntervalLatency', False)
         )
 
     def handle_metric_list(self, metric_list, data, source):
@@ -83,8 +100,8 @@ class BrixbitsPlugin(object):
         if int(data['msgType']) == self.MESSAGE_TYPE_APP_SERVER_METRICS:
             source = '%s_%s' % (data['Host'], data['AppInstance'])
             self.handle_metric_list(self.get_app_server_metric_list(), data['data'][0], source)
-        elif int(data['msgType']) == self.MESSAGE_TYPE_APP_SERVER_TRANSACTIONS:
-            metric_list = self.get_app_server_transactions_metric_list()
+        elif int(data['msgType']) == self.MESSAGE_TYPE_TRANSACTION_METRICS:
+            metric_list = self.get_transaction_metric_list()
             for trx in data['data']:
                 source = '%s_%s_%s' % (data['Host'], data['AppInstance'], trx['TransactionName'])
                 self.handle_metric_list(metric_list, trx, source)
@@ -96,7 +113,8 @@ class BrixbitsPlugin(object):
             boundary_plugin.log_metrics_to_file(reports_log)
         boundary_plugin.start_keepalive_subprocess()
 
-        self.listener_app = BrixbitsApp(self.handle_metrics)
+        self.listener_app = BrixbitsApp(self.handle_metrics, int(self.settings.get('port', 12001)),
+            self.settings.get('username', 'brixbits'), self.settings.get('password', 'brixbits'))
         self.listener_app.start()
 
 

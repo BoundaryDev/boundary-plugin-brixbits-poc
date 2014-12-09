@@ -1,4 +1,4 @@
-boundary-plugin-brixbits-poc
-============================
+Boundary Brixbits Plugin
+========================
 
-Boundary.com plugin for Brixbits PoC
+This plugin is a proof of concept which brings data from Brixbits into Boundary.
