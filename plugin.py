@@ -43,6 +43,7 @@ class BrixbitsApp(object):
 class BrixbitsPlugin(object):
     MESSAGE_TYPE_APP_SERVER_METRICS = 2
     MESSAGE_TYPE_TRANSACTION_METRICS = 3
+    MESSAGE_TYPE_EXIT_POINT_METRICS = 4
 
     def __init__(self, boundary_metric_prefix):
         self.boundary_metric_prefix = boundary_metric_prefix
@@ -82,6 +83,23 @@ class BrixbitsPlugin(object):
             ('BRIXBITS_POC_LATENCY', 'IntervalLatency', False)
         )
 
+    @staticmethod
+    def get_exit_point_metric_list():
+        return (
+            ('BRIXBITS_POC_EXIT_AVERAGE_CONNECT_LATENCY', 'DeltaAvgConnectExitLatency', False),
+            ('BRIXBITS_POC_EXIT_AVERAGE_READ_LATENCY', 'DeltaAvgReadExitLatency', False),
+            ('BRIXBITS_POC_EXIT_AVERAGE_WRITE_LATENCY', 'DeltaAvgWriteExitLatency', False),
+            ('BRIXBITS_POC_EXIT_CONNECT_ERRORS', 'DeltaConnectErrors', False),
+            ('BRIXBITS_POC_EXIT_CONNECTS', 'DeltaConnectExits', False),
+            ('BRIXBITS_POC_EXIT_ERRORS', 'DeltaExitErrors', False),
+            ('BRIXBITS_POC_EXIT_LATENCY', 'DeltaExitLatency', False),
+            ('BRIXBITS_POC_EXIT_EXITS', 'DeltaExits', False),
+            ('BRIXBITS_POC_EXIT_READ_ERRORS', 'DeltaReadErrors', False),
+            ('BRIXBITS_POC_EXIT_READS', 'DeltaReadExits', False),
+            ('BRIXBITS_POC_EXIT_WRITE_ERRORS', 'DeltaWriteErrors', False),
+            ('BRIXBITS_POC_EXIT_WRITES', 'DeltaWriteExits', False),
+        )
+
     def handle_metric_list(self, metric_list, data, source):
         for metric_item in metric_list:
             boundary_name, metric_name, accumulate = metric_item[:3]
@@ -108,6 +126,11 @@ class BrixbitsPlugin(object):
             for trx in data['data']:
                 source = '%s_%s_%s' % (data['Host'], data['AppInstance'], trx['TransactionName'])
                 self.handle_metric_list(metric_list, trx, source)
+        elif int(data['msgType']) == self.MESSAGE_TYPE_EXIT_POINT_METRICS:
+            metric_list = self.get_exit_point_metric_list()
+            for exitpoint in data['data']:
+                source = '%s_%s_%s' % (data['Host'], data['AppInstance'], exitpoint['ExitHostPort'])
+                self.handle_metric_list(metric_list, exitpoint, source)
 
     def main(self):
         logging.basicConfig(level=logging.ERROR, filename=self.settings.get('log_file', None))
