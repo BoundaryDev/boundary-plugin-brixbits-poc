@@ -12,8 +12,9 @@ import boundary_accumulator
 
 
 class BrixbitsApp(object):
-    def __init__(self, data_callback, port=12001, username='brixbits', password='brixbits'):
+    def __init__(self, data_callback, port=12001, username='brixbits', password='brixbits', debug=False):
         self.data_callback = data_callback
+        self.debug = debug
 
         self.port = port
         self.conf = {
@@ -26,8 +27,9 @@ class BrixbitsApp(object):
 
     def start(self):
         cherrypy.config.update({'server.socket_port': self.port, 'log.screen': False})
-        cherrypy.log.error_log.propagate = False
-        cherrypy.log.access_log.propagate = False
+        if not self.debug:
+            cherrypy.log.error_log.propagate = False
+            cherrypy.log.access_log.propagate = False
         cherrypy.quickstart(self, '/', self.conf)
 
     @cherrypy.expose
@@ -36,6 +38,8 @@ class BrixbitsApp(object):
         len = cherrypy.request.headers['Content-Length']
         rawbody = cherrypy.request.body.read(int(len))
         data = json.loads(rawbody)
+        if self.debug:
+            pprint.pprint(data)
         self.data_callback(data)
         return 'OK'
 
@@ -129,7 +133,8 @@ class BrixbitsPlugin(object):
         elif int(data['msgType']) == self.MESSAGE_TYPE_EXIT_POINT_METRICS:
             metric_list = self.get_exit_point_metric_list()
             for exitpoint in data['data']:
-                source = '%s_%s_%s' % (data['Host'], data['AppInstance'], exitpoint['ExitHostPort'])
+                source = '%s_%s_%s:%s' % (data['Host'], data['AppInstance'],
+                                          exitpoint['ExitHostName'], exitpoint['ExitHostPort'])
                 self.handle_metric_list(metric_list, exitpoint, source)
 
     def main(self):
@@ -140,7 +145,8 @@ class BrixbitsPlugin(object):
         boundary_plugin.start_keepalive_subprocess()
 
         self.listener_app = BrixbitsApp(self.handle_metrics, int(self.settings.get('port', 12001)),
-            self.settings.get('username', 'brixbits'), self.settings.get('password', 'brixbits'))
+            self.settings.get('username', 'brixbits'), self.settings.get('password', 'brixbits'),
+            self.settings.get('debug', False))
         self.listener_app.start()
 
 
