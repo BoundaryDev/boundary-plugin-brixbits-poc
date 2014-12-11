@@ -133,7 +133,7 @@ class BrixbitsPlugin(object):
         elif int(data['msgType']) == self.MESSAGE_TYPE_EXIT_POINT_METRICS:
             metric_list = self.get_exit_point_metric_list()
             for exitpoint in data['data']:
-                source = '%s_%s_%s:%s' % (data['Host'], data['AppInstance'],
+                source = '%s_%s_%s:%s' % ('host' or data['Host'], 'app' or data['AppInstance'],
                                           exitpoint['ExitHostName'], exitpoint['ExitHostPort'])
                 self.handle_metric_list(metric_list, exitpoint, source)
 
